@@ -3553,6 +3553,96 @@ result in loss of work.");
                 throw new ScriptException("Please load data.win first!");
             }
         }
+        
+        private object SpriteData { get; set; }
+
+        private async void MenuItem_ExportAllSprites(object sender, RoutedEventArgs e)
+        {
+            // Iterate through all sprites and export them using ExportAll_Click
+            if (Data == null)
+            {
+                this.ShowError("No data loaded!");
+                return;
+            }
+            
+            OpenFolderDialog folderDlg = new OpenFolderDialog();
+            folderDlg.Title = "Select a folder to export the sprite data to";
+            
+            if (folderDlg.ShowDialog() != true)
+            {
+                return;
+            }
+            
+            MainWindow mainWindow = Application.Current.MainWindow as MainWindow;
+            bool includePadding = (mainWindow.ShowQuestion("Include padding?") == MessageBoxResult.Yes);
+            
+            foreach (var sprite in Data.Sprites)
+            {
+                this.SpriteData = sprite;
+                ExportAll_Click(sender, e, folderDlg.FolderName, includePadding);
+            }
+        }
+        
+        private void ExportAll_Click(object sender, RoutedEventArgs e, string folder, bool includePadding)
+        {
+            MainWindow mainWindow = Application.Current.MainWindow as MainWindow;
+            UndertaleSprite sprite = this.SpriteData as UndertaleSprite;
+
+            if (sprite == null) return;
+            var fileName = sprite.Name.Content + ".png";
+
+            if (sprite.IsSpineSprite)
+            {
+                return;
+            }
+            
+            try
+            {
+                using TextureWorker worker = new();
+                if (sprite.Textures.Count > 1)
+                {
+                    string dir = folder;
+                    string name = Path.GetFileNameWithoutExtension(fileName);
+                    string path = Path.Combine(dir!, name);
+                    string ext = Path.GetExtension(fileName);
+
+                    Directory.CreateDirectory(path);
+                    foreach (var tex in sprite.Textures.Select((tex, id) => new { id, tex }))
+                    {
+                        try
+                        {
+                            worker.ExportAsPNG(tex.tex.Texture, Path.Combine(path, sprite.Name.Content + "_" + tex.id + ext), null, includePadding);
+                        }
+                        catch (Exception ex)
+                        {
+                            mainWindow.ShowError("Failed to export file: " + ex.Message, "Failed to export file");
+                        }
+                    }
+                }
+                else if (sprite.Textures.Count == 1)
+                {
+                    string dir = folder;
+                    string path = Path.Combine(dir!, fileName);
+                    
+                    try
+                    {
+                        worker.ExportAsPNG(sprite.Textures[0].Texture, path, null, includePadding);
+                    }
+                    catch (Exception ex)
+                    {
+                        mainWindow.ShowError("Failed to export file: " + ex.Message, "Failed to export file");
+                    }
+                }
+                else
+                {
+                    mainWindow.ShowError("No frames to export", "Failed to export sprite");
+                }
+            }
+            catch (Exception ex)
+            {
+                mainWindow.ShowError("Failed to export: " + ex.Message, "Failed to export sprite");
+            }
+        }
 
         private async void MenuItem_OffsetMap_Click(object sender, RoutedEventArgs e)
         {

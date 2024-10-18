@@ -89,6 +89,13 @@
                             </Style>
                         </MenuItem.Style>
                     </MenuItem>
+                    <MenuItem Header="Export all sprites" Click="MenuItem_ExportAllSprites">
+                        <MenuItem.Style>
+                            <Style TargetType="{x:Type MenuItem}">
+                                <Setter Property="IsEnabled" Value="{Binding CanSave}"/>
+                            </Style>
+                        </MenuItem.Style>
+                    </MenuItem>
                     <MenuItem Name="RunGMSDebuggerItem" Header="Run game under GMS _debugger" Command="PrintPreview" InputGestureText="Shift+F5">
                         <MenuItem.Style>
                             <Style TargetType="{x:Type MenuItem}">
